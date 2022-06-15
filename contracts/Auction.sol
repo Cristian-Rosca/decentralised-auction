@@ -92,7 +92,7 @@ contract Auction {
             address payable recipient;
             uint value;
 
-            if(auctionState == State.Cancelled){ // auction was cancelled 
+            if(auctionState == State.Cancelled){ // auction was cancelled – everybody gets their full bid amounts back
                 recipient = payable(msg.sender);
                 value = bids[msg.sender];
             }
@@ -113,6 +113,7 @@ contract Auction {
                 }
             }
         
+            bids[recipient] = 0; // restting the bid amount of the recipient to 0 to prevent security flaw
             recipient.transfer(value);
 
         }
