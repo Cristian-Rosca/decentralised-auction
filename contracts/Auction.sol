@@ -28,6 +28,10 @@ contract Auction {
         bidIncrement = 100;
     }
 
+    function getHighestBindingBid() view public  returns(uint){
+        return highestBindingBid;
+    }
+
     modifier notOwner{
         require(msg.sender != owner);
         _;
@@ -43,6 +47,10 @@ contract Auction {
         _;
     }
 
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+    }
+
     function min(uint a, uint b) pure internal returns(uint){
         if (a > b) {
             return a;
@@ -52,6 +60,10 @@ contract Auction {
         }
     }
 
+
+    function cancelAuction() public onlyOwner{
+        auctionState = State.Cancelled;
+    }
 
     function placeBid() public payable notOwner afterStart beforeEnd {
         require(auctionState == State.Running);
@@ -71,5 +83,6 @@ contract Auction {
         }
 
     }
+
 
 }
