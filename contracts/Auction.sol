@@ -25,7 +25,7 @@ contract Auction {
         // if duration is 7 days, divide number of seconds in 7 days by 15 (i.e. seconds per block)
         endBlock = startBlock + 40320;
         ipfsHash = "";
-        bidIncrement = 100;
+        bidIncrement = 1 ether;
     }
 
     function getHighestBindingBid() view public  returns(uint){
@@ -49,6 +49,7 @@ contract Auction {
 
     modifier onlyOwner() {
         require(msg.sender == owner);
+        _;
     }
 
     function min(uint a, uint b) pure internal returns(uint){
@@ -83,6 +84,38 @@ contract Auction {
         }
 
     }
+
+        function finaliseAuction() public {
+            require(auctionState == State.Cancelled || block.number > endBlock);
+            require(msg.sender == owner || bids[msg.sender] > 0);
+
+            address payable recipient;
+            uint value;
+
+            if(auctionState == State.Cancelled){ // auction was cancelled 
+                recipient = payable(msg.sender);
+                value = bids[msg.sender];
+            }
+            else{ // auction ended, not canceleld
+                if(msg.sender == owner) { // this is the owner
+                    recipient = owner;
+                    value = highestBindingBid;
+                }
+                else{ // this is a bidder calling the finaliseAuction function to receive back eth
+                    if(msg.sender == highestBidder){ // the highest bidder – gets difference between highest bid and binding bid
+                        recipient = highestBidder;
+                        value = bids[highestBidder] - highestBindingBid;
+                    }
+                    else{ // another bidder receives their full bid amount back
+                        recipient = payable(msg.sender);
+                        value = bids[msg.sender];
+                    }
+                }
+            }
+        
+            recipient.transfer(value);
+
+        }
 
 
 }
